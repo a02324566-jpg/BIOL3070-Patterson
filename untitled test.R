@@ -18,3 +18,11 @@ summary (test)
 
 
 head (bloodmeal_data)
+
+geographic map
+
+```{r}
+library(maps)
+help(package='maps')
+map(database='county',region='utah', col="grey",fill=TRUE, bg="white", lwd=0.05, mar=rep(0,4), border=0, ylim=c(35,45))
+```

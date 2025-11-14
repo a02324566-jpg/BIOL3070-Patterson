@@ -1,7 +1,7 @@
-Fireflies Utah Firefly Populatons 2014-2024
+Utah Firefly Populatons 2014-2024
 ================
 Grant Patterson
-2025-10-29
+2025-11-13
 
 - [Abstract](#abstract)
 - [Background](#background)
@@ -11,6 +11,7 @@ Grant Patterson
   - [Prediction](#prediction)
 - [Methods](#methods)
   - [First Analysis - Boxplot](#first-analysis---boxplot)
+- [Discussion](#discussion)
   - [Interpretation of Analysis 1](#interpretation-of-analysis-1)
 - [Conclusion](#conclusion)
 - [References](#references)
@@ -18,6 +19,18 @@ Grant Patterson
 # Abstract
 
 # Background
+
+Fireflies are found throughout North America, being the most prevalent
+in the Eastern United States. There are populations throughout the
+Western states as well, though their population distribution is not well
+documented. To amend this, a citizen science program was started to
+report sightings of fireflies throughout Utah. These sightings were
+recorded between 2014 and 2024, including the date, time, and county of
+the sightings. Not all of this data was properly reported though, with
+some dates ranging as far back as 1964 (likely an unintentional error on
+the part of the reporter or recorder). We took this data and parsed
+through it, clarifying or removing data that was not of proper use to us
+before we began our analysis.
 
 # Study questions and Hypothesis
 
@@ -34,7 +47,7 @@ Norther Utah than Southern Utah.
 
 ## Prediction
 
-There will be higher firefly popuations in Northern than Southern Utah
+There will be higher firefly populations in Northern than Southern Utah
 
 # Methods
 
@@ -44,116 +57,31 @@ opposed to just those of a scientific background. This information was
 then cleaned up by the collection team and then our team did further
 cleaning up of the data (expanding abbreviations, clarifying negative
 values that aught to have been positive, and removing irrelevant
-information)
+information).
 
 ## First Analysis - Boxplot
 
 ``` r
-# Firefly Boxplot
+# Firefly Boxplot (Log-Transformed, No Blanks)
 
-# Load needed packages
 library(ggplot2)
-library(stringi)
 
 # Read in the data
 fireflies <- read.csv("Copy of firefliesUtah - Usable Data.csv", stringsAsFactors = FALSE)
-
-# Rename columns to simpler names
 colnames(fireflies) <- c("firefly_count", "region")
 
-# Diagnostics
-cat("Original region values:\n")
-```
+# Remove blank or missing region values
+fireflies <- subset(fireflies, region != "" & !is.na(region))
 
-    ## Original region values:
-
-``` r
-print(unique(fireflies$region))
-```
-
-    ## [1] "north" "south" ""
-
-``` r
-cat("\nCounts by region (before cleaning):\n")
-```
-
-    ## 
-    ## Counts by region (before cleaning):
-
-``` r
-print(as.data.frame(table(region = fireflies$region, useNA = "ifany")))
-```
-
-    ##   region Freq
-    ## 1           2
-    ## 2  north  434
-    ## 3  south   61
-
-``` r
-# Replace blanks with NA
-fireflies$region[fireflies$region == ""] <- NA
-
-# Normalize
-fireflies$region <- stri_trans_general(fireflies$region, "NFKC")
-
-# Remove invisible characters
-fireflies$region <- stri_replace_all_regex(fireflies$region, "\\p{C}", "")
-
-# Convert non-breaking spaces to regular and trim spaces
-fireflies$region <- gsub("\u00A0", " ", fireflies$region)
-fireflies$region <- trimws(fireflies$region)
-
-# Convert to lowercase
-fireflies$region <- tolower(fireflies$region)
-
-# Fix obvious typos or abbreviations
-fireflies$region[fireflies$region %in% c("n", "nrth", "noth")] <- "north"
-fireflies$region[fireflies$region %in% c("s", "sth", "soth")] <- "south"
-
-# Keep valid categories
-fireflies$region <- factor(fireflies$region, levels = c("north", "south"))
-fireflies_clean <- droplevels(subset(fireflies, !is.na(region)))
-
-# Check column names
-cat("\nUnique cleaned region values:\n")
-```
-
-    ## 
-    ## Unique cleaned region values:
-
-``` r
-print(unique(fireflies_clean$region))
-```
-
-    ## [1] north south
-    ## Levels: north south
-
-``` r
-cat("\nCounts by region (after cleaning):\n")
-```
-
-    ## 
-    ## Counts by region (after cleaning):
-
-``` r
-print(as.data.frame(table(region = fireflies_clean$region)))
-```
-
-    ##   region Freq
-    ## 1  north  434
-    ## 2  south   61
-
-``` r
-#Box Plot
-ggplot(fireflies_clean, aes(x = region, y = firefly_count, fill = region)) +
-geom_boxplot(width = 0.6, color = "black", alpha = 0.7) + # clean, solid boxes
+# Box plot with log10 transformation (+1 to avoid log(0))
+ggplot(fireflies, aes(x = region, y = log10(firefly_count + 1), fill = region)) +
+geom_boxplot(width = 0.6, color = "black", alpha = 0.7) +
 labs(
-title = "Firefly Abundance by Region",
+title = "Firefly Abundance by Region (Log Scale)",
 x = "Region",
-y = "Firefly Count"
+y = "Log-Transformed Firefly Count"
 ) +
-scale_fill_manual(values = c("north" = "#8EC9E8", "south" = "#F4A261")) + # subtle professional palette
-coord_cartesian(ylim = c(0, 50)) +
+scale_fill_manual(values = c("north" = "#8EC9E8", "south" = "#F4A261")) +
 theme_minimal(base_size = 13) +
 theme(
 legend.position = "none",
@@ -168,8 +96,150 @@ panel.grid.minor = element_blank()
     ## Warning: Removed 1 row containing non-finite outside the scale range
     ## (`stat_boxplot()`).
 
-![](FirefliesUtah_files/figure-gfm/unnamed-chunk-1-1.png)<!-- --> \#
-Discussion
+![](FirefliesUtah_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+\##second analysis
+
+``` r
+# Split Violin Plot (y-axis limited to 50)r
+
+library(ggplot2)
+library(gghalves)
+library(stringi)
+
+# Read and clean your data
+fireflies <- read.csv("Copy of firefliesUtah - Usable Data.csv", stringsAsFactors = FALSE)
+colnames(fireflies) <- c("firefly_count", "region")
+
+fireflies$region[fireflies$region == ""] <- NA
+fireflies$region <- stri_trans_general(fireflies$region, "NFKC")
+fireflies$region <- stri_replace_all_regex(fireflies$region, "\\p{C}", "")
+fireflies$region <- gsub("\u00A0", " ", fireflies$region)
+fireflies$region <- trimws(tolower(fireflies$region))
+fireflies$region[fireflies$region %in% c("n", "nrth", "noth")] <- "north"
+fireflies$region[fireflies$region %in% c("s", "sth", "soth")] <- "south"
+fireflies$region <- factor(fireflies$region, levels = c("north", "south"))
+fireflies_clean <- droplevels(subset(fireflies, !is.na(region)))
+
+# Split violin plot
+ggplot() +
+geom_half_violin(
+data = subset(fireflies_clean, region == "north"),
+aes(x = factor(1), y = firefly_count, fill = region),
+side = "l", trim = TRUE, color = "black", alpha = 0.7
+) +
+geom_half_violin(
+data = subset(fireflies_clean, region == "south"),
+aes(x = factor(1), y = firefly_count, fill = region),
+side = "r", trim = TRUE, color = "black", alpha = 0.7
+) +
+scale_fill_manual(values = c("north" = "#8EC9E8", "south" = "#F4A261")) +
+coord_cartesian(ylim = c(0, 50)) + # y-axis capped at 50
+labs(
+title = "Firefly Abundance: North vs South",
+x = NULL,
+y = "Firefly Count"
+) +
+theme_minimal(base_size = 13) +
+theme(
+legend.position = "bottom",
+plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+axis.text.x = element_blank(),
+axis.ticks.x = element_blank()
+)
+```
+
+    ## Warning: Removed 1 row containing non-finite outside the scale range
+    ## (`stat_half_ydensity()`).
+
+![](FirefliesUtah_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+Code for Poisson Regression
+
+``` r
+# Read in the data
+fireflies <- read.csv("Copy of firefliesUtah - Usable Data.csv", stringsAsFactors = FALSE)
+colnames(fireflies) <- c("firefly_count", "region")
+
+# Remove blank or missing region values
+fireflies <- subset(fireflies, region != "" & !is.na(region))
+
+# Poisson regression
+poisson_model <- glm(firefly_count ~ region, data = fireflies, family = "poisson")
+
+# Summary of the model
+summary(poisson_model)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = firefly_count ~ region, family = "poisson", data = fireflies)
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)  2.62561    0.01293  203.06   <2e-16 ***
+    ## regionsouth  1.13788    0.02340   48.63   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for poisson family taken to be 1)
+    ## 
+    ##     Null deviance: 30429  on 493  degrees of freedom
+    ## Residual deviance: 28450  on 492  degrees of freedom
+    ##   (1 observation deleted due to missingness)
+    ## AIC: 30188
+    ## 
+    ## Number of Fisher Scoring iterations: 7
+
+``` r
+# Exponentiated coefficients (rate ratios)
+exp(coef(poisson_model))
+```
+
+    ## (Intercept) regionsouth 
+    ##   13.812933    3.120145
+
+``` r
+# Check for overdispersion
+dispersion <- sum(residuals(poisson_model, type = "pearson")^2) / poisson_model$df.residual
+dispersion # If > 1.5, overdispersion may be present
+```
+
+    ## [1] 273.6239
+
+``` r
+# Quasi-Poisson if overdispersion
+quasi_model <- glm(firefly_count ~ region, data = fireflies, family = "quasipoisson")
+summary(quasi_model)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = firefly_count ~ region, family = "quasipoisson", 
+    ##     data = fireflies)
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   2.6256     0.2139   12.28  < 2e-16 ***
+    ## regionsouth   1.1379     0.3871    2.94  0.00344 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for quasipoisson family taken to be 273.6309)
+    ## 
+    ##     Null deviance: 30429  on 493  degrees of freedom
+    ## Residual deviance: 28450  on 492  degrees of freedom
+    ##   (1 observation deleted due to missingness)
+    ## AIC: NA
+    ## 
+    ## Number of Fisher Scoring iterations: 7
+
+``` r
+# Add predicted counts to the data
+fireflies$predicted_count <- predict(poisson_model, newdata = fireflies, type = "response")
+```
+
+# Discussion
 
 ## Interpretation of Analysis 1
 
@@ -184,3 +254,4 @@ running*
 
 *For now, just the link, this will be updated later*
 <https://docs.google.com/spreadsheets/d/1p3Gv6F1u4GXp2thnB-FvD5aYHqHRUH9K-lViqrgiSzo/edit?gid=2103391198#gid=2103391198>
+<https://www.sciencedirect.com/science/article/pii/S0304380007003511>
