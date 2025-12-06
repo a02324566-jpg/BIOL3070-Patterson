@@ -1,5 +1,5 @@
 ---
-title: "Utah Firefly Populatons 2014-2024"
+title: "Firefly Abundance by Region in Utah"
 author: "Grant Patterson"
 date: "2025-11-13"
 output: 
@@ -141,7 +141,6 @@ The Wilcoxon test yielded a p-value of 0.2794, which is far greater than the 0.0
 
 The medians of both northern and southern counties being 4 supports that claim that there is no significant statistical difference between these two data sets.
 
--------
 #Discussion
 
 ## Interpretation of Analysis 1

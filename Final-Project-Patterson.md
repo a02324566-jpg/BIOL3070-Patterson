@@ -254,8 +254,6 @@ The medians of both northern and southern counties being 4 supports that
 claim that there is no significant statistical difference between these
 two data sets.
 
-------------------------------------------------------------------------
-
 \#Discussion
 
 ## Interpretation of Analysis 1
