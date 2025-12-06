@@ -164,8 +164,8 @@ axis.ticks.x = element_blank()
 )
 ```
 
-![](FirefliesUtah_files/figure-gfm/unnamed-chunk-2-1.png)<!-- --> This
-plot shows that there is little difference between the number of
+![](Final-Project-Patterson_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+This plot shows that there is little difference between the number of
 sightings in northern and southern Utah counties. It also demonstrates
 visually that that neither data set follows a normal curve.
 
